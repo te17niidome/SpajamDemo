@@ -21,28 +21,57 @@ class _NiidomeHomePageState extends State<NiidomeHomePage> {
       body: Center(
         child: Column(
           children: [
-            Text('宇宙人'),
+            const Text('宇宙人'),
             Container(
               color: Colors.blue,
               width: 200,
-              height: 160,
-              child: DropdownButton(
-                items: [
-                  DropdownMenuItem(
-                    child: Text('a'),
-                    value: 1,
+              // height: 160,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: DropdownButton(
+                  items: const [
+                    DropdownMenuItem(
+                      value: 1,
+                      child: Text('a'),
+                    ),
+                    DropdownMenuItem(
+                      value: 2,
+                      child: Text('b'),
+                    ),
+                    DropdownMenuItem(
+                      value: 3,
+                      child: Text('c'),
+                    ),
+                  ],
+                  onChanged: (int? value) {
+                    setState(() {
+                      isSelectedItem = value;
+                    });
+                  },
+                  value: isSelectedItem,
+                  isExpanded: true,
+                  // テキストのスタイル
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
                   ),
-                  DropdownMenuItem(
-                    child: Text('a'),
-                    value: 1,
+
+                  // アイコンのデザイン
+                  iconEnabledColor: Colors.white,
+                  iconSize: 20,
+                  icon: const Icon(Icons.add_circle_outline),
+
+                  // アンダーライン
+                  underline: Container(
+                    height: 0,
+                    color: Colors.white,
                   ),
-                  DropdownMenuItem(
-                    child: Text('a'),
-                    value: 1,
-                  ),
-                ],
-                onChanged: (int? value) {},
-                value: isSelectedItem,
+
+                  // リストに色を付ける
+                  dropdownColor: Colors.blue[200],
+                  // リストに影を付ける
+                  elevation: 16,
+                ),
               ),
             ),
           ],
