@@ -21,7 +21,8 @@ class _NiidomeHomePageState extends State<NiidomeHomePage> {
       body: Center(
         child: Column(
           children: [
-            const Text('宇宙人'),
+            const Text('反射神経測定アプリ',
+                style: TextStyle(fontFamily: 'YuseiMagic', fontSize: 40)),
             Container(
               color: Colors.blue,
               width: 200,
