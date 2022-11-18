@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Nidomh_Page.dart';
+import 'package:flutter_application_1/camera_test.dart';
 
 void main() {
   runApp(const MyApp());
@@ -58,12 +59,14 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => NiidomeHomePage(title: "niidome"),
-                    ),
-                  );
+                  amain();
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     // builder: (context) => NiidomeHomePage(title: "niidome"),
+                  //     // builder: (context) => amain(),
+                  //   ),
+                  // );
                 },
                 child: Text('nidomhのデモページへ'))
           ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'package:camera/camera.dart';
 
 class NiidomeHomePage extends StatefulWidget {
   const NiidomeHomePage({super.key, required this.title});
@@ -19,17 +20,29 @@ class _NiidomeHomePageState extends State<NiidomeHomePage>
   var diff_time;
 
   // アニメーションで使う変数
-  late AnimationController controller;
+  late AnimationController _controller;
   late Animation<double> animation;
 
   Future<void> showPicture() async {
+    // main 関数内で非同期処理を呼び出すための設定
+    WidgetsFlutterBinding.ensureInitialized();
+
+    // デバイスで使用可能なカメラのリストを取得
+    final cameras = await availableCameras();
+
+    // 利用可能なカメラのリストから特定のカメラを取得
+    final firstCamera = cameras.first;
+
+    // 取得できているか確認
+    print(firstCamera);
+
     var random = math.Random();
     int _time = 2000 + random.nextInt(8000);
     print('明日の天気は');
     await Future.delayed(Duration(milliseconds: _time));
     print('晴れです');
     _startTime = DateTime.now();
-    controller.forward();
+    _controller.forward();
   }
 
   // ウィジェットが作成されたタイミングで処理を行うinitState()
@@ -38,27 +51,37 @@ class _NiidomeHomePageState extends State<NiidomeHomePage>
     super.initState();
     showPicture();
 
-    controller = AnimationController(
+    _controller = AnimationController(
       vsync: this, // with SingleTickerProviderStateMixin を忘れずに
-      duration: Duration(seconds: 2),
+      duration: Duration(milliseconds: 500),
     );
-    animation = Tween<double>(
-      begin: 1.0, // アニメーション開始時のスケール
-      end: 2.0, // アニメーション終了時のスケール
-    ).animate(controller);
+    // animation = Tween<double>(
+    //   begin: 1.0, // アニメーション開始時のスケール
+    //   end: 2.0, // アニメーション終了時のスケール
+    // ).animate(controller);
   }
 
   // disposeは画面が消えるときの処理
   //    AnimationControllerのインスタンスを破棄する
   @override
   void dispose() {
-    controller.dispose();
+    _controller.dispose();
 
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // アニメーションのロゴのサイズ
+    const double smallLogo = 50;
+    const double bigLogo = 70;
+    const double cont_size = 360;
+    // アニメーションの座標
+    const double start_x = 0 - smallLogo;
+    const double start_y = 0 - smallLogo;
+    const double end_x = cont_size;
+    const double end_y = cont_size;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Nidomhのぺーじ'),
@@ -69,20 +92,35 @@ class _NiidomeHomePageState extends State<NiidomeHomePage>
             const Text('反射神経測定アプリ',
                 style: TextStyle(fontFamily: 'YuseiMagic', fontSize: 40)),
             Container(
-              width: 360,
-              height: 360,
+              width: cont_size,
+              height: cont_size,
               color: Colors.yellow[50],
               child: Stack(
                 children: [
                   Text('あいうえお'),
                   Text('かきくけこ'),
-                  ScaleTransition(
-                    scale: animation,
-                    child: Container(
-                      width: 50,
-                      height: 50,
-                      color: Colors.black,
-                    ),
+                  PositionedTransition(
+                    rect: RelativeRectTween(
+                      begin: RelativeRect.fromLTRB(
+                          start_x,
+                          start_y,
+                          cont_size - start_x - smallLogo,
+                          cont_size - start_y - smallLogo),
+                      end: RelativeRect.fromLTRB(
+                        end_x,
+                        end_y,
+                        cont_size - end_x - smallLogo,
+                        cont_size - end_x - smallLogo,
+                      ),
+                    ).animate(CurvedAnimation(
+                      parent: _controller,
+                      curve: Curves.easeIn,
+                    )),
+                    child: const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: FlutterLogo(
+                          size: smallLogo,
+                        )),
                   ),
                 ],
               ),
@@ -96,7 +134,7 @@ class _NiidomeHomePageState extends State<NiidomeHomePage>
                   diff_time = _buttonTime.difference(_startTime);
                 });
                 //
-                controller.stop();
+                _controller.stop();
               },
               icon: Icon(Icons.play_arrow),
               label: Text("Play"),
@@ -157,6 +195,61 @@ class _NiidomeHomePageState extends State<NiidomeHomePage>
           ],
         ),
       ),
+    );
+  }
+}
+
+/// 写真撮影画面
+class TakePictureScreen extends StatefulWidget {
+  const TakePictureScreen({
+    Key? key,
+    required this.camera,
+  }) : super(key: key);
+
+  final CameraDescription camera;
+
+  @override
+  TakePictureScreenState createState() => TakePictureScreenState();
+}
+
+class TakePictureScreenState extends State<TakePictureScreen> {
+  late CameraController _controller;
+  late Future<void> _initializeControllerFuture;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = CameraController(
+      // カメラを指定
+      widget.camera,
+      // 解像度を定義
+      ResolutionPreset.medium,
+    );
+
+    // コントローラーを初期化
+    _initializeControllerFuture = _controller.initialize();
+  }
+
+  @override
+  void dispose() {
+    // ウィジェットが破棄されたら、コントローラーを破棄
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // FutureBuilder で初期化を待ってからプレビューを表示（それまではインジケータを表示）
+    return FutureBuilder<void>(
+      future: _initializeControllerFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return CameraPreview(_controller);
+        } else {
+          return const Center(child: CircularProgressIndicator());
+        }
+      },
     );
   }
 }
