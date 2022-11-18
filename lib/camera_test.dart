@@ -1,10 +1,18 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
+import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'main.dart';
+
+// image_gallery_saverのimport追加
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 
 Future<void> amain() async {
   // main 関数内で非同期処理を呼び出すための設定
@@ -58,6 +66,8 @@ class TakePictureScreenState extends State<TakePictureScreen>
   var diff_time;
   late AnimationController _animeController;
   late Animation<double> animation;
+
+  final GlobalKey _globalKey = GlobalKey();
 
   Future<void> AnimeOn() async {
     // // main 関数内で非同期処理を呼び出すための設定
@@ -126,87 +136,93 @@ class TakePictureScreenState extends State<TakePictureScreen>
         title: Text('Nidomhのぺーじ'),
       ),
       body: Center(
-        child: Column(
-          children: [
-            const Text('反射神経測定アプリ',
-                style: TextStyle(fontFamily: 'YuseiMagic', fontSize: 40)),
-            Container(
-              width: cont_size_x,
-              height: cont_size_y,
-              color: Colors.yellow[50],
-              child: Stack(
-                children: [
-                  FutureBuilder<void>(
-                    future: _initializeControllerFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.done) {
-                        return CameraPreview(_controller);
-                      } else {
-                        return const CircularProgressIndicator();
-                      }
-                    },
-                  ),
-                  // Image.file(File(image.path)),
-                  PositionedTransition(
-                    rect: RelativeRectTween(
-                      begin: RelativeRect.fromLTRB(
-                          start_x,
-                          start_y,
-                          cont_size_x - start_x - smallLogo,
-                          cont_size_y - start_y - smallLogo),
-                      end: RelativeRect.fromLTRB(
-                        end_x,
-                        end_y,
-                        cont_size_x - end_x - smallLogo,
-                        cont_size_y - end_y - smallLogo,
-                      ),
-                    ).animate(CurvedAnimation(
-                      parent: _animeController,
-                      curve: Curves.easeIn,
-                    )),
-                    child: const Padding(
-                        padding: EdgeInsets.all(8),
-                        child: FlutterLogo(
-                          size: smallLogo,
-                        )),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              child: Align(
-                alignment: Alignment.bottomLeft,
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "あなたは" + diff_time.toString() + "秒かかりました．",
-                        style: TextStyle(fontSize: 20),
-                      ),
-                      SizedBox(
-                        height: 150,
-                      ),
-                      ElevatedButton(
-                          onPressed: () {
-                            main();
-                            // Navigator.push(
-                            //   context,
-                            //   MaterialPageRoute(
-                            //     // builder: (context) => NiidomeHomePage(title: "niidome"),
-                            //     // builder: (context) => amain(),
-                            //   ),
-                            // );
-                          },
-                          child: Text('戻る'))
-                    ],
-                  ),
+        child: RepaintBoundary(
+          key: _globalKey,
+          child: Column(
+            children: [
+              const Text('反射神経測定アプリ',
+                  style: TextStyle(fontFamily: 'YuseiMagic', fontSize: 40)),
+              Container(
+                width: cont_size_x,
+                height: cont_size_y,
+                color: Colors.yellow[50],
+                child: Stack(
+                  children: [
+                    FutureBuilder<void>(
+                      future: _initializeControllerFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done) {
+                          return CameraPreview(_controller);
+                        } else {
+                          return const CircularProgressIndicator();
+                        }
+                      },
+                    ),
+                    PositionedTransition(
+                      rect: RelativeRectTween(
+                        begin: RelativeRect.fromLTRB(
+                            start_x,
+                            start_y,
+                            cont_size_x - start_x - smallLogo,
+                            cont_size_y - start_y - smallLogo),
+                        end: RelativeRect.fromLTRB(
+                          end_x,
+                          end_y,
+                          cont_size_x - end_x - smallLogo,
+                          cont_size_y - end_y - smallLogo,
+                        ),
+                      ).animate(CurvedAnimation(
+                        parent: _animeController,
+                        curve: Curves.easeIn,
+                      )),
+                      child: const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: FlutterLogo(
+                            size: smallLogo,
+                          )),
+                    ),
+                  ],
                 ),
               ),
-            )
-          ],
+              Container(
+                child: Align(
+                  alignment: Alignment.bottomLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "あなたは" + diff_time.toString() + "秒かかりました．",
+                          style: TextStyle(fontSize: 20),
+                        ),
+                        SizedBox(
+                          height: 50,
+                          // height: 150,
+                        ),
+                        ElevatedButton(
+                            onPressed: () {
+                              main();
+                              // Navigator.push(
+                              //   context,
+                              //   MaterialPageRoute(
+                              //     // builder: (context) => NiidomeHomePage(title: "niidome"),
+                              //     // builder: (context) => amain(),
+                              //   ),
+                              // );
+                            },
+                            child: Text('戻る')),
+                        ElevatedButton(
+                            onPressed: () => _captureImage(),
+                            child: const Text('Take')),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -220,6 +236,11 @@ class TakePictureScreenState extends State<TakePictureScreen>
 
           // 写真を撮る
           final image = await _controller.takePicture();
+          final Uint8List buffer = await image.readAsBytes();
+          // カメラロールに保存する
+          await ImageGallerySaver.saveImage(buffer, name: image.name);
+
+          _captureImage();
 
           // // 表示用の画面に遷移
           // await Navigator.of(context).push(
@@ -232,6 +253,23 @@ class TakePictureScreenState extends State<TakePictureScreen>
         child: const Icon(Icons.camera_alt),
       ),
     );
+  }
+
+  Future<void> _captureImage() async {
+    final RenderRepaintBoundary boundary =
+        _globalKey.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+    final ui.Image image = await boundary.toImage();
+    final ByteData? byteData =
+        await image.toByteData(format: ui.ImageByteFormat.png);
+    final Uint8List pngBytes = byteData!.buffer.asUint8List();
+    final Directory appDir = await getApplicationDocumentsDirectory();
+    final String appDirPath = appDir.path;
+    print('appDirPath=$appDirPath');
+    final File imageFile = await File('$appDirPath/image.png').create();
+    await imageFile.writeAsBytes(pngBytes);
+
+    // カメラロールにむりに保存する
+    await ImageGallerySaver.saveImage(pngBytes, name: "TESTIMAGE001");
   }
 }
 
