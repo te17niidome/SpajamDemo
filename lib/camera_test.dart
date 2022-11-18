@@ -146,6 +146,7 @@ class TakePictureScreenState extends State<TakePictureScreen>
                       }
                     },
                   ),
+                  // Image.file(File(image.path)),
                   PositionedTransition(
                     rect: RelativeRectTween(
                       begin: RelativeRect.fromLTRB(
@@ -173,22 +174,36 @@ class TakePictureScreenState extends State<TakePictureScreen>
               ),
             ),
             Container(
-              child: Column(
-                children: [
-                  Text("あなたは" + diff_time.toString() + "秒かかりました．"),
-                  ElevatedButton(
-                      onPressed: () {
-                        main();
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(
-                        //     // builder: (context) => NiidomeHomePage(title: "niidome"),
-                        //     // builder: (context) => amain(),
-                        //   ),
-                        // );
-                      },
-                      child: Text('戻る'))
-                ],
+              child: Align(
+                alignment: Alignment.bottomLeft,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "あなたは" + diff_time.toString() + "秒かかりました．",
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      SizedBox(
+                        height: 150,
+                      ),
+                      ElevatedButton(
+                          onPressed: () {
+                            main();
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     // builder: (context) => NiidomeHomePage(title: "niidome"),
+                            //     // builder: (context) => amain(),
+                            //   ),
+                            // );
+                          },
+                          child: Text('戻る'))
+                    ],
+                  ),
+                ),
               ),
             )
           ],
@@ -205,13 +220,14 @@ class TakePictureScreenState extends State<TakePictureScreen>
 
           // 写真を撮る
           final image = await _controller.takePicture();
-          // 表示用の画面に遷移
-          await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => DisplayPictureScreen(imagePath: image.path),
-              fullscreenDialog: true,
-            ),
-          );
+
+          // // 表示用の画面に遷移
+          // await Navigator.of(context).push(
+          //   MaterialPageRoute(
+          //     builder: (context) => DisplayPictureScreen(imagePath: image.path),
+          //     fullscreenDialog: true,
+          //   ),
+          // );
         },
         child: const Icon(Icons.camera_alt),
       ),
