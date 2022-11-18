@@ -213,9 +213,6 @@ class TakePictureScreenState extends State<TakePictureScreen>
                               // );
                             },
                             child: Text('戻る')),
-                        ElevatedButton(
-                            onPressed: () => _captureImage(),
-                            child: const Text('Take')),
                       ],
                     ),
                   ),
